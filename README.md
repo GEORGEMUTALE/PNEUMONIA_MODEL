@@ -51,15 +51,6 @@ We use the publicly available **Chest X-Ray Images (Pneumonia)** dataset (Mooney
 
 ## ⚙️ Key Technical Features
 
-### 🔄 Online vs. Offline Augmentation
-*This project systematically tested both strategies, concluding that **dynamic online augmentation** significantly outperforms static offline scaling.*
-
-- **Online Augmentation (Final Model)**: Random brightness/contrast shifts, rotations (±10°), translations, and random cropping (85%-100%). Applied stochastically at *every* epoch to provide infinite variations.
-- **Offline Benchmark (Controlled Test)**: A static 4× expansion was tested, bloating the dataset from **4 GB to 15 GB**. It revealed:
-  - **Static Memorization**: The model memorized fixed noise patterns, causing a sharp validation loss spike after epoch 15.
-  - **I/O Starvation**: GPU utilization dropped significantly due to CPU-to-GPU data transfer bottlenecks.
-  - **Performance Drop**: AUC dropped from **0.978 to 0.938**.
-- **Noise Experiment**: Adding Gaussian and salt-and-pepper noise *harmed* performance (AUC 0.978 → 0.938) and was removed from the final pipeline.
 
 ### 🖥️ Infrastructure Optimization
 - **GPU**: T4x2 (dual GPUs with 16GB VRAM each), significantly outperforming legacy P4 GPUs.
@@ -80,34 +71,17 @@ The best configuration (**DenseNet121 + EMA + Online Augmentation**) achieved ou
 
 > **Statistical Validation**: A chi-square test on the 2×2 confusion matrix yielded a highly significant association (**χ² = 388.8, df = 1, p < 0.0001**), confirming the predictions are far from random.
 
-### 🔬 Ablation Studies
-To isolate the effect of individual engineering decisions, we conducted the following comparisons:
 
-| Configuration Variation | Test Accuracy | ROC-AUC | Observation |
-| :--- | :--- | :--- | :--- |
-| **Baseline (DenseNet121 + Online)** | **90.0%** | **0.978** | Optimal generalization. |
-| + Offline Static Augmentation (15GB) | 82.5% | 0.938 | **Severe drop** due to memorization & I/O bottlenecks. |
-| + Synthetic Noise (Gaussian/S&P) | 82.5% | 0.938 | Obscured fine pathological features; removed. |
-| - Exponential Moving Average (EMA) | 87.2% | 0.966 | EMA contributed ~3% accuracy gain. |
-| ResNet18 (vs. DenseNet121) | 86.9% | 0.968 | Lighter & faster, but less powerful. |
-| Training for 100 epochs (vs. 50) | 90.2% | 0.977 | Negligible gain; cheaper schedule retained. |
-
----
 
 ## 🔍 Model Interpretability (Grad-CAM)
 To ensure clinical trust, we implemented **Grad-CAM** heatmaps (Selvaraju et al., 2017). The visualizations confirm that the model focuses its attention on the **lung fields and central chest regions**—the exact areas a radiologist inspects—rather than irrelevant image markers or borders.
 
 > When the model makes an error, the Grad-CAM activation frequently drifts toward the diaphragm or image corners, providing a useful warning mechanism that the prediction may be unreliable.
 
-<p align="center">
-  <img src="assets/gradcam_sample.png" alt="Grad-CAM Heatmaps" width="600">
-  <br>
-  <em>Figure: Grad-CAM overlays showing model attention on lung regions.</em>
-</p>
+
 
 ---
 
 ## 🚀 Getting Started
 
-### 1. Clone the Repository
-```bash
+
